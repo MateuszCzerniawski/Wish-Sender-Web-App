@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HOME</title>
+    <style>
+        .userbox{
+            display: inline-block;
+            justify-items: end;
+            justify-content: end;
+            justify-self: end;
+            margin-left: 20px;
+            background-color: rgb(31,87,130);
+        }
+        header{
+            display: flex;
+            justify-content: space-between;
+        }
+        .userlabel{
+        font-size: 7rem;
+        text-align: center;
+        font-weight: bold;
+        margin-left: 20px;
+        }
+        .archive_div{
+            display: flex;
+            width: 40%;
+            justify-content: space-between;
+            gap: 20%;
+        }
+        .center_div{
+            margin-top: 5%;
+            display: flex;
+            justify-content: center;
+        }
+        .archive_button{
+            width: 200px;
+            height: 85px;
+            font-size: 3rem;
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .main_content_div{
+            display: flex;
+            justify-content: space-between;
+            margin: 2%;
+        }
+        .button_div{
+            width:35%;
+            display: grid;
+            grid-template-columns: repeat(3, 40%);
+            grid-template-rows: repeat(3, 200px);
+            grid-gap: 15px;
+        }
+        .edit_div{
+            width:50%;
+            justify-content: inline-center;
+            justify-items: stretch;
+            border: 1px solid green;
+            border-radius: 2%;
+        }
+        .edit_text{
+            width:85%;
+            height: 70%;
+            justify-content: space-between;
+        }
+        h2{
+        text-align: center;
+        justify-content: center;
+        }
+        .template_button{
+            text-align: center;
+            font-weight: bold;
+            font-size: 3rem;
+            color: white;
+            font-family: Times New Roman, sans-serif;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 25%;
+            text-shadow: 2px 2px 2px black;
+        }
+        .prefix_text{
+            width:45%;
+            margin-bottom: 1%;
+            margin-top: 1%;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <label class="userlabel">I WISH U</label>
+    <div class="userbox">
+        <img src="/assets/images/guest_image.png" alt="IMAGE">
+        <label class="userlabel" id="usernameLabel">{{ username }}</label>
+    </div>
+</header>
+<div class="center_div">
+    <div class="archive_div">
+        <a class="archive_button" id="archive_button" href="/archive/{{ username }}">Archive</a>
+        <a class="archive_button" id="sent_or_register_button" href="#">Sent</a>
+    </div>
+</div>
+<div class="main_content_div">
+    <div class="button_div">
+        <button class="template_button" onclick="gen_wish('birthday_nameday')" style="background-image: url('/assets/images/birthday.png');">Birthday</button>
+        <button class="template_button" onclick="gen_wish('christmas')" style="background-image: url('/assets/images/christmas.png');">Christmas</button>
+        <button class="template_button" onclick="gen_wish('condolences')" style="background-image: url('/assets/images/condolences.png');">Condolences</button>
+        <button class="template_button" onclick="gen_wish('easter')" style="background-image: url('/assets/images/easter.png');">Easter</button>
+        <button class="template_button" onclick="gen_wish('family_member_day')" style="background-image: url('/assets/images/special_day.png');">Special Day</button>
+        <button class="template_button" onclick="gen_wish('graduation')" style="background-image: url('/assets/images/graduation.png');">Graduation</button>
+        <button class="template_button" onclick="gen_wish('job')" style="background-image: url('/assets/images/job.png');">Job</button>
+        <button class="template_button" onclick="gen_wish('wedding')" style="background-image: url('/assets/images/wedding.png');">Wedding</button>
+        <button class="template_button" onclick="reveal_gen_button()" style="background-image: url('/assets/images/custom.png');">Custom</button>
+    </div>
+    <div class="edit_div">
+        <h2>Wishes</h2>
+        <input class="prefix_text" type="text" id="prefix_text">
+        <button id="generate_button" style="display: none;" onclick="generate()">Generate</button>
+        <textarea  class="edit_text" id="edit_text"></textarea>
+        <input class="prefix_text" type="text" id="sign_text">
+        <button onclick="sign()">Sign</button>
+        <button onclick="copy_content()" id="copy_button">Copy</button>
+        <button onclick="send()">Send</button>
+    </div>
+</div>
+<script>
+    const url = window.location.href;
+    const urlParams = new URLSearchParams(window.location.search);
+    const loginOption = urlParams.get('login_option');
+
+    function copy_content(){
+        navigator.clipboard.writeText(document.getElementById('edit_text').value)
+        var button = document.getElementById('copy_button')
+        button.textContent = 'Copied';
+        setTimeout(() => {button.textContent = 'Copy';} , 4000);
+    }
+    async function get_prefix(type) {
+    try {
+        const response = await fetch(`/prefixfor/${type}`);
+        if (!response.ok) {
+            throw new Error('Błąd sieciowy');
+        }
+        const prefix = await response.text();
+        document.getElementById('prefix_text').value = prefix;
+    } catch (error) {
+        console.error('Wystąpił błąd:', error);
+    }
+}
+    function sign() {
+        var signature = document.getElementById('sign_text').value;
+        var wish = document.getElementById('edit_text').value;
+        document.getElementById('edit_text').value = wish + '\n' + signature;
+    }
+    function reveal_gen_button(){
+        document.getElementById('generate_button').style.display = 'block';
+    }
+    async function fetch_generated(){
+        const controller = new AbortController();
+        const signal = controller.signal;
+        const prefix = document.getElementById('prefix_text').value;
+        const fetchPromise = fetch('/wish/generate/'+prefix, { signal })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Błąd sieciowy');
+                    }
+                    return response.text();
+                });
+        const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => {
+                    controller.abort();
+                    reject(new Error('Przekroczono limit czasu oczekiwania na odpowiedź'));
+                }, 30_000);
+            });
+        const response = await Promise.race([fetchPromise, timeoutPromise]);
+        return response;
+	}
+    async function generate(){
+        const edit_text = document.getElementById('edit_text');
+        let dots = '';
+        let dotCount = 0;
+        let intervalId = setInterval(() => {
+            dotCount = (dotCount + 1) % 4;
+            dots = '.'.repeat(dotCount).split('').join(' ');
+            edit_text.value = dots;
+        }, 200);
+        try {
+            const result = await fetch_generated();
+            clearInterval(intervalId);
+            edit_text.value = result;
+        } catch (error) {
+            console.error('Wystąpił błąd:', error);
+            clearInterval(intervalId);
+            edit_text.value = 'An error occurred, try again later';
+        }
+    }
+    async function gen_wish(type){
+         document.getElementById('generate_button').style.display = 'none'; //we dont want it here
+         document.getElementById('edit_text').value = '';
+         await get_prefix(type);
+         await generate();
+    }
+    async function send(){
+        var data = {
+            username: '{{username}}',
+            wish: document.getElementById('edit_text').value,
+            login_option: loginOption
+        };
+        var response = await fetch('/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        if(response.ok){
+            var responseText = await response.text();
+            window.location.href = responseText;
+        }else{
+            console.error("Błąd podczas wysyłania formularza");
+        }
+    }
+    const button = document.getElementById('sent_or_register_button');
+    if (button) {
+        button.href = (loginOption === 'user' ? `/planned/{{username}}` : '/');
+    } else {
+        console.error("Element with ID 'sent_or_register_button' not found.");
+    }
+    document.getElementById('archive_button').href += '?login_option='+loginOption;
+</script>
+</body>
+</html>

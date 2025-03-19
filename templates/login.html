@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Log in</title>
+    <style>
+  .vbox{
+      display: inline-grid;
+      gap: 2%;
+  }
+  .right_box {
+    display: inline-block;
+    justify-items: end;
+    justify-content: end;
+    justify-self: end;
+  }
+    </style>
+</head>
+<body>
+<div><h1>I wish U</h1></div>
+<div class="vbox">
+    <la>Login option:</la>
+    <div class="right_box">
+        <label for="user">as User:</label>
+        <input type="radio" id="user" name="loginMode" value="user" checked>
+    </div>
+    <div class="right_box">
+        <label for="guest">as Guest:</label>
+        <input type="radio" id="guest" name="loginMode" value="guest">
+    </div>
+</div>
+<form action="/login" method="POST" class="vbox" id="loginData">
+   <div>
+       <label for="username" id="usernameLabel">username:</label>
+       <input type="text" id="username" name="username">
+   </div>
+    <div>
+        <label for="password" id="passwordLabel">password:</label>
+        <input type="password" id="password" name="password">
+    </div>
+    <div class="right_box">
+        <label for="rememberMe" id="rmLabel">Remember me</label>
+        <input type="checkbox" id="rememberMe">
+        <br>
+        <br>
+        <input id="login_button" type="submit" value="Log in">
+        <button id="register_button" onclick="register()">Register</button>
+    </div>
+    <input type="hidden" value="user", id="login_option", name="login_option">
+</form>
+<div id="error_div">
+   {% if error %}
+    <p>{{ error }}</p>
+    {% endif %}
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('input[name="loginMode"]').change(function() {
+        if($('#guest').is(':checked')) {
+            $('#usernameLabel').text('name:');
+            $('#login_button').text('Log in as Guest');
+            $('#passwordLabel').text(' ');
+            $('#password').hide();
+            $('#rememberMe').prop('checked', false); // Uncheck "Remember me" for guest login
+            $('#rmLabel').hide()
+            $('#rememberMe').hide();
+            var loginOption = $('input[name="loginMode"]:checked').val();
+            $('#login_option').val('guest');
+        } else {
+            $('#usernameLabel').text('username:');
+            $('#passwordLabel').text('password:');
+            $('#login_button').text('Log in');
+            $('#password').show();
+            $('#rmLabel').show();
+            $('#rememberMe').show();
+            var loginOption = $('input[name="loginMode"]:checked').val();
+            $('#login_option').val('user');
+        }
+    });
+});
+    function register(){
+        const user = {
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value
+        };
+        $.ajax({
+                url: '/register',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(user),
+                success: function(response) {
+                    document.getElementById('loginData').submit();
+                },
+                error: function(xhr, status, exact_error) {
+                    $('error_div').html('<p>' + 'This user already exists' + '</p>');
+                }
+            });
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Send</title>
+    <style>
+        .userbox{
+            display: inline-block;
+            justify-items: end;
+            justify-content: end;
+            justify-self: end;
+            margin-left: 20px;
+            background-color: rgb(31,87,130);
+        }
+        header{
+            display: flex;
+            justify-content: space-between;
+        }
+        .userlabel{
+            font-size: 7rem;
+            text-align: center;
+            font-weight: bold;
+            margin-left: 20px;
+        }
+        .center_div{
+            margin-top: 2%;
+            display: flex;
+            justify-content: center;
+            gap: 1%;
+        }
+        p{
+            width: 70%;
+            text-align: center;
+            font-size: 1.3rem;
+            color: black;
+            text-shadow: 2px 2px 2px white;
+        }
+        .media_button{
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 50px;
+            font-weight: bold;
+            font-size: 0.9em;
+            color: white;
+            font-family: Times New Roman, sans-serif;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            text-shadow: 2px 2px 2px black;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <label class="userlabel">I WISH U</label>
+        <div class="userbox">
+            <img src="/assets/images/guest_image.png" alt="IMAGE">
+            <label class="userlabel" id="usernameLabel">{{ username }}</label>
+        </div>
+    </header>
+    <div class="center_div"><p id="wish_text">{{wish}}</p></div>
+    <div class="center_div">
+        <label for="sign_text">Haven't signed yet?</label>
+        <input type="text" id="sign_text">
+        <button id="sign_button" onclick="sign()">Sign</button>
+    </div>
+    <div class="center_div">
+        <label>Send via:</label>
+        <button class="media_button" id="WhatsUpp" onclick="select_platform('WhatsUpp')" style="background-image: url('/assets/images/whatsupp.png');">WhatsUpp</button>
+        <button class="media_button" id="Discord" onclick="select_platform('Discord')" style="background-image: url('/assets/images/discord.png');">Discord</button>
+        <button class="media_button" id="Messanger" onclick="select_platform('Messanger')" style="background-image: url('/assets/images/messanger.png');">Messanger</button>
+        <button class="media_button" id="Email" onclick="select_platform('Email')" style="background-image: url('/assets/images/gmail.png');">Email</button>
+        <button class="media_button" id="SMS" onclick="select_platform('SMS')" style="background-image: url('/assets/images/sms.png');">SMS</button>
+    </div>
+    <div class="center_div">
+        <div id="WhatsUpp_tab" style="display: none;"><p>NOT IMPLEMENTED</p></div>
+        <div id="Discord_tab">
+            <label for="discord_id_text">Insert id of discord user or channel</label>
+            <input type="text" id="discord_id_text">
+        </div>
+        <div id="Messanger_tab" style="display: none;"><p>NOT IMPLEMENTED</p></div>
+        <div id="Email_tab" style="display: none;"><p>NOT IMPLEMENTED</p></div>
+        <div id="SMS_tab" style="display: none;"><p>NOT IMPLEMENTED</p></div>
+    </div>
+    <div class="center_div" onclick="send_now()"><button>SEND</button></div>
+    <div class="center_div"><p>OR</p></div>
+    <form action="/send/plan" method="post" id="form">
+        <div class="center_div">
+        <label for="dateText" id="dateLabel">Date:</label>
+        <input type="date" id="dateText" name="date">
+        <label for="periodText" id="periodLabel">Every:</label>
+        <input type="text" id="periodText" name="period" pattern="[0-9]+" title="natural numbers only">
+        <select id="period_type" name="period_type">
+            <option value="once">once</option>
+            <option value="day">day</option>
+            <option value="week">week</option>
+            <option value="month">month</option>
+            <option value="year">year</option>
+        </select>
+        <label for="untilText" id="untilLabel">Until:</label>
+        <input type="date" id="untilText" name="until">
+    </div>
+    <div class="center_div"><input type="submit" value="PLAN"></div>
+        <input type="hidden" value="{{wish}}" id="wish_content" name="wish_content">
+        <input type="hidden" value="" id="platforms" name="platforms">
+        <input type="hidden" value="" id="discord_id" name="discord_id">
+    </form>
+    <script>
+        var platforms = [];
+
+        function select_platform(platform_name){
+            var index = platforms.indexOf(platform_name);
+            var border = 'black';
+            if (index === -1) {
+                platforms.push(platform_name);
+                border = 'green';
+            } else {
+                platforms.splice(index, 1);
+            }
+            document.getElementById("platforms").value = platforms.join(",");
+            document.getElementById(platform_name).style.border = '2px solid ' + border;
+        }
+
+        function sign() {
+            var signature = document.getElementById('sign_text').value;
+            var wish = document.getElementById('wish_text').textContent;
+            document.getElementById('wish_text').textContent = wish + '\n' + signature;
+            document.getElementById('wish_content').value = wish + '\n' + signature;
+        }
+
+        function send_now(){
+            var to_send = {
+                'username' : '{{username}}',
+                'wish' : document.getElementById('wish_content').value,
+                'platforms' : document.getElementById("platforms").value,
+                'discord_id':  document.getElementById('discord_id').value
+            };
+            fetch('/send/now', {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(to_send)
+                }
+            )
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            }).then(responseText => {
+                document.open();
+                document.write(responseText);
+                document.close();
+            }).catch(error => {
+                console.error('There was a problem with your fetch operation:', error);
+            });
+        }
+
+        document.getElementById('form').onsubmit = function(event) {
+            event.preventDefault();
+            var form = event.target;
+            var form_data = new FormData(form);
+            var as_json = {};
+            as_json['username'] = '{{username}}';
+            form_data.forEach((value,key)=>{as_json[key]=value});
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(as_json)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            }).then(responseText => {
+                document.open();
+                document.write(responseText);
+                document.close();
+            }).catch(error => {
+                console.error('There was a problem with your fetch operation:', error);
+            });
+        }
+        document.getElementById('discord_id_text').addEventListener('input', function(event){
+             document.getElementById('discord_id').value = event.target.value;
+        });
+        select_platform('Discord')
+    </script>
+</body>
+</html>

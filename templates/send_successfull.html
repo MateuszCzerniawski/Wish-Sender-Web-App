@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sent Successfully</title>
+    <style>
+        .userbox{
+            display: inline-block;
+            justify-items: end;
+            justify-content: end;
+            justify-self: end;
+            margin-left: 20px;
+            background-color: rgb(31,87,130);
+        }
+        header{
+            display: flex;
+            justify-content: space-between;
+        }
+        .userlabel{
+            font-size: 7rem;
+            text-align: center;
+            font-weight: bold;
+            margin-left: 20px;
+        }
+        .center_div{
+            margin-top: 5%;
+            display: flex;
+            justify-content: center;
+            gap: 1%;
+        }
+        p{
+            text-align: center;
+            font-size: 2em;
+        }
+        .go_back_button{
+            font-size: 3rem;
+            width: 10%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <label class="userlabel">I WISH U</label>
+        <div class="userbox">
+            <img src="/assets/images/guest_image.png" alt="IMAGE">
+            <label class="userlabel" id="usernameLabel">{{ username }}</label>
+        </div>
+    </header>
+    <div class="center_div">
+        <p>Your wishes came right to destination!</p>
+    </div>
+    <br>
+    <div class="center_div">
+        <a class="go_back_button" href="/home/{{username}}?login_option=user">Go back</a>
+    </div>
+</body>
+</html>

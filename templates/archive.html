@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Archive</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .userbox{
+            display: inline-block;
+            justify-items: end;
+            justify-content: end;
+            justify-self: end;
+            margin-left: 20px;
+            background-color: rgb(31,87,130);
+        }
+        header{
+            display: flex;
+            justify-content: space-between;
+        }
+        .userlabel{
+        font-size: 7rem;
+        text-align: center;
+        font-weight: bold;
+        margin-left: 20px;
+        }
+        .goback_button{
+            margin-top: 2%;
+            width: 200px;
+            height: 85px;
+            font-size: 3rem;
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .center_div{
+            margin-top: 3%;
+            display: flex;
+            justify-content: center;
+        }
+        .button_div{
+            width:95%;
+            display: grid;
+            grid-template-columns: repeat(8, 11.5%);
+            grid-template-rows: repeat(1, 150px);
+            grid-gap: 1%;
+        }
+        .template_button{
+            text-align: center;
+            font-weight: bold;
+            font-size: 2rem;
+            color: white;
+            font-family: Times New Roman, sans-serif;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 25%;
+            text-shadow: 2px 2px 2px black;
+        }
+        .wishes_display{
+            margin: 3%;
+            display: grid;
+            grid-template-columns: 4fr 1fr; /* Pierwsza kolumna zajmuje dostępne miejsce, druga kolumna jest automatyczna */
+            gap: 1%;
+        }
+        .edit_wish_div{
+            align-content: space-around;
+            justify-content: space-between;
+
+        }
+        .copy_button{
+        }
+    </style>
+</head>
+<body>
+<header>
+    <label class="userlabel">I WISH U</label>
+    <div class="userbox">
+        <img src="/assets/images/guest_image.png" alt="IMAGE">
+        <label class="userlabel" id="usernameLabel">{{ username }}</label>
+    </div>
+</header>
+<div class="center_div">
+    <div class="button_div">
+        <button class="template_button" style="background-image: url('/assets/images/birthday.png');" onclick="showwishes('birthday_nameday')">Birthday</button>
+        <button class="template_button" style="background-image: url('/assets/images/christmas.png');" onclick="showwishes('christmas')">Christmas</button>
+        <button class="template_button" style="background-image: url('/assets/images/condolences.png');" onclick="showwishes('condolences')">Condolences</button>
+        <button class="template_button" style="background-image: url('/assets/images/easter.png');" onclick="showwishes('easter')">Easter</button>
+        <button class="template_button" style="background-image: url('/assets/images/special_day.png');" onclick="showwishes('family_member_day')">Special Day</button>
+        <button class="template_button" style="background-image: url('/assets/images/graduation.png');" onclick="showwishes('graduation')">Graduation</button>
+        <button class="template_button" style="background-image: url('/assets/images/job.png');" onclick="showwishes('job')">Job</button>
+        <button class="template_button" style="background-image: url('/assets/images/wedding.png');" onclick="showwishes('wedding')">Wedding</button>
+    </div>
+</div>
+<div id="wishes_display", class="wishes_display"></div>
+<script>
+            const url = window.location.href;
+        const urlParams = new URLSearchParams(window.location.search);
+        const loginOption = urlParams.get('login_option');
+
+        function showwishes(category){
+             const wishes = {{ wishes|tojson }};
+             const tweaks = {{ tweaks|tojson }};
+             const display = document.getElementById('wishes_display')
+             display.innerHTML = '';
+             for(const [key, value] of Object.entries(wishes[category])){
+
+                const paragraph = document.createElement('p');
+                paragraph.textContent = `${value}`;
+                paragraph.classList.add('wish_text');
+                display.appendChild(paragraph);
+
+                const edit_div = document.createElement('div');
+                edit_div.classList.add('edit_wish_div');
+                display.appendChild(edit_div);
+
+                if (tweaks.hasOwnProperty(category)) {
+                    if(tweaks[category].hasOwnProperty(key)){
+                        const fields = [];
+                        for(const [index, gap] of Object.entries(tweaks[category][key])){
+                            const gap_text = document.createElement('input');
+                            gap_text.type = 'text';
+                            gap_text.value = gap;
+                            fields.push(gap_text);
+                            edit_div.appendChild(gap_text);
+                        }
+                        edit_div.appendChild(document.createElement('br'));
+
+                        const replace_button = document.createElement('button');
+                        replace_button.textContent='Replace';
+                        replace_button.addEventListener('click', () => {
+                                fill_gaps(paragraph, category, key,fields);
+                            });
+                        edit_div.appendChild(replace_button);
+                    }
+                }
+                const copy_button = document.createElement('button');
+                copy_button.textContent='Copy';
+                copy_button.addEventListener('click', () => {
+                    copy_content(paragraph,copy_button);
+                });
+                edit_div.appendChild(copy_button);
+
+                const send_button = document.createElement('button');
+                send_button.textContent='Send';
+                send_button.addEventListener('click', () => {
+                    send(paragraph.textContent);
+                });
+                edit_div.appendChild(send_button);
+
+             }
+       }
+
+       async function send(wish){
+        var data = {
+            username: '{{username}}',
+            wish: wish,
+            login_option: loginOption
+        };
+        var response = await fetch('/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        if(response.ok){
+            var responseText = await response.text();
+            window.location.href = responseText;
+        }else{
+            console.error("Błąd podczas wysyłania formularza");
+        }
+    }
+       function fill_gaps(paragraph,category,wish,replacement_fields){
+            const replacements = [];
+            for (text_field of replacement_fields){
+                replacements.push(text_field.value);
+            }
+            const dataToSend = {
+            wish_category: category,
+            wish_filename: wish,
+            repl: replacements
+            };
+            $.ajax({
+                url: '/wish/replace',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(dataToSend),
+                success: function(response) {
+                    paragraph.textContent = response;
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                }
+            });
+       }
+        function copy_content(paragraph,button){
+             navigator.clipboard.writeText(paragraph.textContent)
+             button.textContent = 'Copied';
+             setTimeout(() => {button.textContent = 'Copy';} , 2000);
+        }
+</script>
+</body>
+</html>

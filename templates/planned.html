@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sent</title>
+    <style>
+        .userbox{
+            display: inline-block;
+            justify-items: end;
+            justify-content: end;
+            justify-self: end;
+            margin-left: 20px;
+            background-color: rgb(31,87,130);
+        }
+        header{
+            display: flex;
+            justify-content: space-between;
+        }
+        .userlabel{
+            font-size: 7rem;
+            text-align: center;
+            font-weight: bold;
+            margin-left: 20px;
+        }
+        .center_div{
+            margin: 5%;
+            display: flex;
+            justify-content: center;
+            gap: 1%;
+        }
+        p{
+            text-align: center;
+            font-size: 2em;
+            width:60%;
+        }
+        .go_back_button{
+            font-size: 3rem;
+            width: 10%;
+        }
+        .info_div{
+            display: block;
+            width: 40%;
+            border: 1px solid green;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <label class="userlabel">I WISH U</label>
+        <div class="userbox">
+            <img src="/assets/images/guest_image.png" alt="IMAGE">
+            <label class="userlabel" id="usernameLabel">{{ username }}</label>
+        </div>
+    </header>
+    <div id="planned_div"></div>
+
+<script>
+    const planned = {{planned|tojson}};
+    const display_all = document.getElementById('planned_div')
+    display_all.innerHTML = '';
+    for(plan of planned){
+        console.log(plan);
+        const display = document.createElement('div');
+        display.classList.add('center_div');
+        const paragraph = document.createElement('p');
+        plan['wish_lines'].forEach((line,i)=>{
+            if(i>0){
+                paragraph.appendChild(document.createElement('br'));
+            }
+            paragraph.appendChild(document.createTextNode(line));
+        });
+        display.appendChild(paragraph);
+        const info = document.createElement('div');
+        info.classList.add('info_div');
+        for (const [key, value] of Object.entries(plan['receiver'])) {
+            const label = document.createElement('label');
+            label.textContent = 'via:' + key + ' to: ' + value;
+            info.appendChild(label);
+            info.appendChild(document.createElement('br'));
+        }
+        const dates = document.createElement('label');
+        dates.textContent = 'Send dates:';
+        info.appendChild(dates);
+        info.appendChild(document.createElement('br'));
+        for(date of plan['dates']){
+            const label = document.createElement('label');
+            label.textContent = date;
+            info.appendChild(label);
+            info.appendChild(document.createElement('br'));
+        }
+        display.appendChild(info);
+        display_all.appendChild(display);
+    }
+</script>
+</body>
+</html>
